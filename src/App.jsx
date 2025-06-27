@@ -29,9 +29,10 @@ export default function App() {
   const handleSelectLesson = (lessonId) => { const lesson = allLessons.find(l => l.id === lessonId); if (lesson) { setLives(3); setQuizContext({ lesson: lesson, type: 'lesson' }); setActiveView('quiz'); } };
   const startPracticeSession = () => { const completed = Array.from(userProgress.completed); const questions = allLessons .filter(l => completed.includes(l.id)) .flatMap(l => l.quiz.map(q => ({...q, lessonTitle: l.title}))); const practiceQuestions = questions.sort(() => 0.5 - Math.random()).slice(0, 5); const practiceLesson = { id: 'practice_session', title: 'Sesión de Práctica', quiz: practiceQuestions, }; setLives(3); setQuizContext({ lesson: practiceLesson, type: 'practice' }); setActiveView('quiz'); };
   const handleIncorrectAnswer = () => { const newLives = lives - 1; setLives(newLives); if (newLives <= 0) { setModalState({ isOpen: true, title: '¡Has fallado!', content: <p>Te has quedado sin vidas. ¡Puedes comprar más en la tienda o repasar la lección!</p> }); setActiveView(quizContext.type === 'lesson' ? 'path' : 'practice'); } };
-
+  
   const handleQuizComplete = (finalScore, totalQuestions) => {
-    console.log
+    console.log("PASO 1: handleQuizComplete se inició.");
+
     const isSuccess = finalScore === totalQuestions;
     if (!isSuccess) { setActiveView(quizContext.type === 'lesson' ? 'path' : 'practice'); return; }
 
@@ -69,13 +70,18 @@ export default function App() {
       }
 
       if (hasChanges) {
-        console.log
-          updateProgressInFirestore({
-              xp: newProgress.xp,
-              blueEssence: newProgress.blueEssence,
-              completed: Array.from(newProgress.completed),
-              achievements: Array.from(newProgress.unlockedAchievements)
-          });
+        console.log("PASO 2: Intentando guardar en Firestore los siguientes datos:", {
+          xp: newProgress.xp,
+          blueEssence: newProgress.blueEssence,
+          completed: Array.from(newProgress.completed),
+          achievements: Array.from(newProgress.unlockedAchievements)
+        });
+        updateProgressInFirestore({
+          xp: newProgress.xp,
+          blueEssence: newProgress.blueEssence,
+          completed: Array.from(newProgress.completed),
+          achievements: Array.from(newProgress.unlockedAchievements)
+        });
       }
 
       return newProgress;
