@@ -31,6 +31,7 @@ export default function App() {
   const handleIncorrectAnswer = () => { const newLives = lives - 1; setLives(newLives); if (newLives <= 0) { setModalState({ isOpen: true, title: '¡Has fallado!', content: <p>Te has quedado sin vidas. ¡Puedes comprar más en la tienda o repasar la lección!</p> }); setActiveView(quizContext.type === 'lesson' ? 'path' : 'practice'); } };
 
   const handleQuizComplete = (finalScore, totalQuestions) => {
+    console.log
     const isSuccess = finalScore === totalQuestions;
     if (!isSuccess) { setActiveView(quizContext.type === 'lesson' ? 'path' : 'practice'); return; }
 
@@ -68,6 +69,7 @@ export default function App() {
       }
 
       if (hasChanges) {
+        console.log
           updateProgressInFirestore({
               xp: newProgress.xp,
               blueEssence: newProgress.blueEssence,
