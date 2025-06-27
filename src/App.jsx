@@ -31,61 +31,59 @@ export default function App() {
   const handleIncorrectAnswer = () => { const newLives = lives - 1; setLives(newLives); if (newLives <= 0) { setModalState({ isOpen: true, title: '¡Has fallado!', content: <p>Te has quedado sin vidas. ¡Puedes comprar más en la tienda o repasar la lección!</p> }); setActiveView(quizContext.type === 'lesson' ? 'path' : 'practice'); } };
   
   const handleQuizComplete = (finalScore, totalQuestions) => {
-    console.log("PASO 1: handleQuizComplete se inició.");
+  console.log("--- INICIO DE DIAGNÓSTICO ---");
+  console.log("Función 'handleQuizComplete' iniciada.");
 
-    const isSuccess = finalScore === totalQuestions;
-    if (!isSuccess) { setActiveView(quizContext.type === 'lesson' ? 'path' : 'practice'); return; }
+  const currentLesson = quizContext.lesson;
+  const isSuccess = finalScore === totalQuestions;
 
-    const currentLesson = quizContext.lesson;
+  console.log(`Lección actual: ${currentLesson.id}. El quiz fue exitoso: ${isSuccess}`);
 
-    setUserProgress(currentProgress => {
-      let hasChanges = false;
-      let newProgress = { ...currentProgress, completed: new Set(currentProgress.completed), unlockedAchievements: new Set(currentProgress.unlockedAchievements) };
+  if (!isSuccess) {
+    console.log("El quiz NO fue exitoso. Saliendo de la función.");
+    console.log("--- FIN DE DIAGNÓSTICO ---");
+    setActiveView(quizContext.type === 'lesson' ? 'path' : 'practice');
+    return;
+  }
 
-      if (quizContext.type === 'practice') {
-        hasChanges = true;
-        newProgress.xp += 10;
-        newProgress.blueEssence += 20;
-        setModalState({isOpen: true, title: '¡Práctica Completada!', content: <p>Ganaste <span className="font-bold text-yellow-400">10 XP</span> y <span className="font-bold text-cyan-400">20 EA</span>.</p> });
-      } else if (quizContext.type === 'lesson' && !currentProgress.completed.has(currentLesson.id)) {
-        hasChanges = true;
-        newProgress.xp += currentLesson.xp;
-        newProgress.blueEssence += currentLesson.essence;
-        newProgress.completed.add(currentLesson.id);
+  setUserProgress(currentProgress => {
+    console.log("Dentro de 'setUserProgress'. El progreso actual es:", currentProgress);
+    
+    const isAlreadyCompleted = currentProgress.completed.has(currentLesson.id);
+    console.log(`¿La lección '${currentLesson.id}' ya está en la lista de completadas?`, isAlreadyCompleted);
 
-        let newAchievementToShow = null;
-        for (const key in achievements) {
-          const achievement = achievements[key];
-          if (!newProgress.unlockedAchievements.has(achievement.id) && achievement.condition(newProgress)) {
-            newProgress.unlockedAchievements.add(achievement.id);
-            if (!newAchievementToShow) newAchievementToShow = achievement;
-          }
-        }
+    let hasChanges = false;
+    let newProgress = { ...currentProgress, completed: new Set(currentProgress.completed), unlockedAchievements: new Set(currentProgress.unlockedAchievements) };
 
-        if (newAchievementToShow) {
-          setModalState({ isOpen: true, title: '¡Logro Desbloqueado!', content: <div className="flex flex-col items-center"><span className="text-4xl mb-2">{newAchievementToShow.icon}</span><h4 className="font-bold text-lg text-white">{newAchievementToShow.title}</h4><p>{newAchievementToShow.description}</p></div> });
-        } else {
-          setModalState({ isOpen: true, title: '¡Lección Superada!', content: <p className="text-lg">¡Felicidades! Has ganado <span className="font-bold text-yellow-400">{currentLesson.xp} XP</span> y <span className="font-bold text-cyan-400">{currentLesson.essence} EA</span>.</p> });
-        }
-      }
+    if (quizContext.type === 'lesson' && !isAlreadyCompleted) {
+      console.log("CONDICIÓN CUMPLIDA: Es una lección y no estaba completada. Calculando recompensas...");
+      hasChanges = true;
+      newProgress.xp += currentLesson.xp;
+      newProgress.blueEssence += currentLesson.essence;
+      newProgress.completed.add(currentLesson.id);
+      // ... (la lógica de los logros y el modal se queda aquí)
+    } else {
+      console.log("CONDICIÓN NO CUMPLIDA. No se darán recompensas. Razón: Es una práctica o la lección ya fue completada.");
+    }
 
-      if (hasChanges) {
-        console.log("PASO 2: Intentando guardar en Firestore los siguientes datos:", {
-          xp: newProgress.xp,
-          blueEssence: newProgress.blueEssence,
-          completed: Array.from(newProgress.completed),
-          achievements: Array.from(newProgress.unlockedAchievements)
-        });
-        updateProgressInFirestore({
-          xp: newProgress.xp,
-          blueEssence: newProgress.blueEssence,
-          completed: Array.from(newProgress.completed),
-          achievements: Array.from(newProgress.unlockedAchievements)
-        });
-      }
+    if (hasChanges) {
+      console.log("Se detectaron cambios. Llamando a 'updateProgressInFirestore'...");
+      updateProgressInFirestore({
+        xp: newProgress.xp,
+        blueEssence: newProgress.blueEssence,
+        completed: Array.from(newProgress.completed),
+        achievements: Array.from(newProgress.unlockedAchievements)
+      });
+    } else {
+      console.log("No se detectaron cambios. No se llamará a 'updateProgressInFirestore'.");
+    }
+    
+    console.log("--- FIN DE DIAGNÓSTICO ---");
+    return newProgress;
+  });
 
-      return newProgress;
-    });
+  setActiveView(quizContext.type === 'lesson' ? 'path' : 'practice');
+};
 
     setActiveView(quizContext.type === 'lesson' ? 'path' : 'practice');
   };
